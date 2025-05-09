@@ -531,9 +531,84 @@
         .light-theme .chat-message {
             background-color: #e0e0e0;
         }
+
+        /* Add styles for settings panel */
+        .settings-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px;
+            background-color: #333;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .settings-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            display: none;
+        }
+
+        .settings-panel.active {
+            display: block;
+        }
+
+        .settings-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+        }
+
+        .settings-overlay.active {
+            display: block;
+        }
+
+        .settings-panel h3 {
+            margin-top: 0;
+            color: #ffcc00;
+        }
+
+        .settings-option {
+            margin: 15px 0;
+        }
+
+        .settings-option button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+        }
+
+        .light-theme .settings-panel {
+            background-color: #fff;
+        }
     </style>
 </head>
 <body>
+    <button class="settings-btn" onclick="toggleSettings()">⚙️ Settings</button>
+    <div class="settings-overlay" id="settings-overlay"></div>
+    <div class="settings-panel" id="settings-panel">
+        <h3>Settings</h3>
+        <div class="settings-option">
+            <button class="btn-borrow-100" onclick="resetGame()">Reset Game</button>
+            <button class="btn-borrow-500" onclick="resetStats()">Reset Statistics</button>
+            <button class="btn-borrow-1000" onclick="toggleSettings()">Close</button>
+        </div>
+    </div>
     <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
     <header>
         <h1>VIRTUAL CASINO</h1>
@@ -2506,6 +2581,58 @@
                 sendChatMessage();
             }
         });
+
+        // Settings toggle
+        function toggleSettings() {
+            document.getElementById('settings-overlay').classList.toggle('active');
+            document.getElementById('settings-panel').classList.toggle('active');
+        }
+
+        // Reset game
+        function resetGame() {
+            bank = 0;
+            debt = 0;
+            stats = { totalWins: 0, totalLosses: 0, biggestWin: 0, currentStreak: 0, gamesPlayed: 0, totalWon: 0, totalLost: 0 };
+            localStorage.removeItem('bank');
+            localStorage.removeItem('debt');
+            localStorage.removeItem('casinoStats');
+            localStorage.removeItem('achievements');
+            localStorage.removeItem('chatMessages');
+            localStorage.removeItem('leaderboard');
+            updateUI();
+            updateStatsDisplay();
+            resetAchievements();
+            resetChatMessages();
+            resetLeaderboard();
+        }
+
+        // Reset statistics
+        function resetStats() {
+            stats = { totalWins: 0, totalLosses: 0, biggestWin: 0, currentStreak: 0, gamesPlayed: 0, totalWon: 0, totalLost: 0 };
+            localStorage.removeItem('casinoStats');
+            updateStatsDisplay();
+        }
+
+        // Reset achievements
+        function resetAchievements() {
+            unlockedAchievements = [];
+            localStorage.removeItem('achievements');
+            renderAchievements();
+        }
+
+        // Reset chat messages
+        function resetChatMessages() {
+            chatMessages = [];
+            localStorage.removeItem('chatMessages');
+            renderChatMessages();
+        }
+
+        // Reset leaderboard
+        function resetLeaderboard() {
+            leaderboard = [];
+            localStorage.removeItem('leaderboard');
+            updateLeaderboard();
+        }
     </script>
 </body>
 </html>

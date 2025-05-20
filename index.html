@@ -856,11 +856,14 @@
             renderBlackjack();
             setGameResult("Blackjack game started! Place your bet and hit or stand!");
             
-            if (blackjackState.playerValue === 21) {
+            // Only auto-win on natural blackjack (first two cards totaling 21)
+            if (blackjackState.playerValue === 21 && blackjackState.playerCards.length === 2) {
                 blackjackState.gameOver = true;
                 bank += blackjackState.betAmount * 1.5;
                 updateUI();
                 setGameResult("Blackjack! You win $" + (blackjackState.betAmount * 1.5) + "!");
+                playSound('win');
+                updateStats(blackjackState.betAmount * 1.5, true);
             }
         }
 
@@ -1356,6 +1359,74 @@
             });
             
             gameContent.appendChild(slotMachineDiv);
+
+            // Add spin button
+            const spinButton = document.createElement('button');
+            spinButton.className = 'btn-borrow-100';
+            spinButton.textContent = 'Spin';
+            spinButton.onclick = spinSlots;
+            
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'action-buttons';
+            actionsDiv.appendChild(spinButton);
+            gameContent.appendChild(actionsDiv);
+        }
+
+        function spinSlots() {
+            if (bank < slotsState.bet) {
+                setGameResult("You don't have enough money for this bet!");
+                return;
+            }
+            
+            bank -= slotsState.bet;
+            updateUI();
+            playSound('spin');
+            
+            const symbols = ['🍒', '🍊', '🍋', '🍇', '7️⃣', '💎'];
+            slotsState.reels = [
+                symbols[Math.floor(Math.random() * symbols.length)],
+                symbols[Math.floor(Math.random() * symbols.length)],
+                symbols[Math.floor(Math.random() * symbols.length)]
+            ];
+            
+            const [a, b, c] = slotsState.reels;
+            let winnings = 0;
+            
+            // Check for winning combinations
+            if (a === b && b === c) {
+                // Three of a kind
+                if (a === '💎') {
+                    winnings = slotsState.bet * 10; // Diamond jackpot
+                } else if (a === '7️⃣') {
+                    winnings = slotsState.bet * 5; // Triple 7s
+                } else {
+                    winnings = slotsState.bet * 3; // Other triples
+                }
+            } else if (a === b || b === c || a === c) {
+                // Two of a kind
+                const pairSymbol = a === b ? a : b === c ? b : a;
+                if (pairSymbol === '💎') {
+                    winnings = slotsState.bet * 2; // Diamond pair
+                } else if (pairSymbol === '7️⃣') {
+                    winnings = slotsState.bet * 1.5; // 7 pair
+                } else {
+                    winnings = slotsState.bet; // Other pairs
+                }
+            }
+            
+            if (winnings > 0) {
+                bank += winnings;
+                updateUI();
+                playSound('win');
+                updateStats(winnings - slotsState.bet, true);
+                setGameResult(`You win $${winnings}!`);
+            } else {
+                playSound('lose');
+                updateStats(slotsState.bet, false);
+                setGameResult("Try again!");
+            }
+            
+            renderSlots();
         }
 
         function renderPoker() {
@@ -1924,50 +1995,6 @@
             }
             
             renderRoulette();
-        }
-
-        function spinSlots() {
-            if (bank < slotsState.bet) {
-                setGameResult("You don't have enough money for this bet!");
-                return;
-            }
-            
-            bank -= slotsState.bet;
-            updateUI();
-            
-            const symbols = ['🍒', '🍊', '🍋', '🍇', '7️⃣', '💎'];
-            slotsState.reels = [
-                symbols[Math.floor(Math.random() * symbols.length)],
-                symbols[Math.floor(Math.random() * symbols.length)],
-                symbols[Math.floor(Math.random() * symbols.length)]
-            ];
-            
-            const [a, b, c] = slotsState.reels;
-            let winnings = 0;
-            
-            if (a === b && b === c) {
-                if (a === '💎') {
-                    winnings = slotsState.bet * 10;
-                } else if (a === '7️⃣') {
-                    winnings = slotsState.bet * 5;
-                } else {
-                    winnings = slotsState.bet * 3;
-                }
-            } else if (a === b || b === c || a === c) {
-                winnings = slotsState.bet;
-            }
-            
-            if (winnings > 0) {
-                bank += winnings;
-                updateUI();
-                playSound('win');
-                updateStats(winnings, true);
-                setGameResult(`You win $${winnings}!`);
-            } else {
-                setGameResult("Try again!");
-            }
-            
-            renderSlots();
         }
 
         function pokerDraw() {
